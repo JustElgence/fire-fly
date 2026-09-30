@@ -47,8 +47,8 @@ export const siteConfig: SiteConfig = {
 	// 站点副标题
 	subtitle: "Demo site",
 
-	// 站点 URL
-	site_url: "https://firefly.cuteleaf.cn",
+	// 站点 URL（暂用 ECS 公网 IP，绑定域名后改为 https://你的域名 并重新 build）
+	site_url: "http://1.94.21.84",
 
 	// 站点描述
 	description:
