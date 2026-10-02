@@ -1,3 +1,4 @@
+// TODO: giscus 需要用户提供公开仓库名后配置（当前 type 为 "none"，评论系统关闭）
 import type { CommentConfig } from "../types/commentConfig";
 
 export const commentConfig: CommentConfig = {

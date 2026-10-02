@@ -45,6 +45,8 @@ export const musicPlayerConfig: MusicPlayerConfig = {
 	// lrc: "/assets/music/lrc/使一颗心免于哀伤-哼唱.lrc",
 	// 2. 或者直接填入歌词字符串内容
 	// lrc: "[00:00.00]歌词内容...",
+	// TODO: 待填歌单——把下面这首主题示例曲替换成你自己的音乐
+	// 音频放 public/assets/music/，封面放 public/assets/music/cover/，这里写 /assets/music/xxx.mp3
 	local: {
 		playlist: [
 			{

@@ -45,8 +45,8 @@ export const displaySettingsConfig: DisplaySettingsConfig =
 		// 全屏壁纸布局切换开关（classic / hero）
 		fullscreenLayoutSwitchable: true,
 
-		// 水波纹动画开关
-		wavesSwitchable: true,
+		// 水波纹动画开关（第7步：波浪已全局关闭，故隐藏该开关）
+		wavesSwitchable: false,
 
 		// 渐变过渡效果开关
 		gradientSwitchable: true,
