@@ -9,10 +9,10 @@ export const profileConfig: ProfileConfig = {
 	avatar: "assets/images/avatar.avif",
 
 	// 名字
-	name: "XiaYe",
+	name: "Teardrop",
 
 	// 个人签名
-	bio: "Hello, I'm XiaYe.",
+	bio: "慢慢来，比较快。",
 
 	// 链接配置
 	// 已经预装的图标集：fa7-brands，fa7-regular，fa7-solid，material-symbols，simple-icons
@@ -21,18 +21,9 @@ export const profileConfig: ProfileConfig = {
 	// `pnpm add @iconify-json/<icon-set-name>`
 	// showName: true 时显示图标和名称，false 时只显示图标
 	links: [
-		{
-			name: "GitHub",
-			icon: "fa7-brands:github",
-			url: "https://github.com/CuteLeaf",
-			showName: false,
-		},
-		{
-			name: "Email",
-			icon: "fa7-solid:envelope",
-			url: "mailto:xiaye@msn.com",
-			showName: false,
-		},
+		// 变量表中 GitHub / Email 均为「无」，故未添加；需要时按下面格式补充：
+		// { name: "GitHub", icon: "fa7-brands:github", url: "https://github.com/你的用户名", showName: false },
+		// { name: "Email", icon: "fa7-solid:envelope", url: "mailto:你的邮箱", showName: false },
 		{
 			name: "RSS",
 			icon: "fa7-solid:rss",
