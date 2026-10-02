@@ -104,22 +104,9 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 			// 首页横幅标题下方的链接图标（可选，支持 showName 显示文字）
 			// 图标支持 Iconify 格式：fa7-brands:github、fa7-solid:envelope、mdi:rss 等
 			links: [
-				{
-					name: "GitHub",
-					icon: "fa7-brands:github",
-					url: "https://github.com/CuteLeaf/Firefly",
-					showName: true,
-				},
-				{
-					name: "Email",
-					icon: "fa7-solid:envelope",
-					url: "mailto:xiaye@msn.com",
-				},
-				{
-					name: "Sponsor",
-					icon: "material-symbols:favorite",
-					url: "https://blog.cuteleaf.cn/sponsor/",
-				},
+				// 第3步：清除作者本人的 GitHub / Email / Sponsor 链接（变量表为「无」，赞助页已关闭）
+				// 需要时按下面格式补充：
+				// { name: "GitHub", icon: "fa7-brands:github", url: "https://github.com/你的用户名", showName: true },
 				{
 					name: "RSS",
 					icon: "fa7-solid:rss",
@@ -137,12 +124,13 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 			transitionEffect: "zoom",
 		},
 		// 水波纹动画效果配置，开启会影响页面性能，增加内存占用，请根据自己的喜好开启
+		// 第7步：水波纹动画全局关闭，关闭后由 gradient 渐变过渡接管底部衔接
 		waves: {
 			enable: {
 				// 桌面端是否启用水波纹动画效果
-				desktop: true,
+				desktop: false,
 				// 移动端是否启用水波纹动画效果
-				mobile: true,
+				mobile: false,
 			},
 		},
 		// 渐变过渡效果配置，当水波纹关闭时自动启用，提供壁纸底部到背景色的平滑过渡
