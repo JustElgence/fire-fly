@@ -79,6 +79,14 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 
 			// MyAnimeList
 			LinkPresets.MAL,
+
+			// 构建发布台(Firefly Studio,访问需令牌)
+			{
+				name: "构建",
+				url: "/studio/",
+				icon: "material-symbols:build",
+				external: true,
+			},
 		],
 	});
 
