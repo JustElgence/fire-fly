@@ -48,7 +48,7 @@ export const siteConfig: SiteConfig = {
 	subtitle: "记录吃过的饭、走过的路、拍下的光",
 
 	// 站点 URL（暂用 ECS 公网 IP，绑定域名后改为 https://你的域名 并重新 build）
-	site_url: "http://1.94.21.84",
+	site_url: "https://1.94.21.84",
 
 	// 站点描述
 	description:
