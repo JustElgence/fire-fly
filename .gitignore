@@ -47,3 +47,6 @@ package/
 .codex*
 .claude
 .mimocode
+
+# 构建产物备份（stale build backups）
+dist.bak-*
