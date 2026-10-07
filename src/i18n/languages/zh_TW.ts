@@ -19,7 +19,6 @@ export const zh_TW: Translation = {
 	[Key.navSocial]: "社交",
 	[Key.navMine]: "我的",
 	[Key.navAbout]: "關於",
-	[Key.navLinks]: "連結",
 	[Key.all]: "全部",
 
 	[Key.tags]: "標籤",
@@ -413,22 +412,6 @@ export const zh_TW: Translation = {
 	[Key.postListLayoutGrid]: "網格",
 
 	// 打賞頁面
-	[Key.sponsor]: "打賞",
-	[Key.sponsorTitle]: "打賞支持",
-	[Key.sponsorDescription]:
-		"如果我的內容對你有幫助，歡迎通過以下方式打賞我，你的支持是我持續創作的動力！",
-	[Key.sponsorMethods]: "打賞方式",
-	[Key.sponsorList]: "打賞列表",
-	[Key.sponsorEmpty]: "暫無打賞記錄",
-	[Key.sponsorAmount]: "金額",
-	[Key.sponsorDate]: "日期",
-	[Key.sponsorMessage]: "留言",
-	[Key.sponsorAnonymous]: "匿名",
-	[Key.scanToSponsor]: "掃碼打賞",
-	[Key.sponsorGoTo]: "前往打賞",
-	[Key.sponsorButton]: "支持與分享",
-	[Key.sponsorButtonText]:
-		"如果這篇文章對你有幫助，歡迎分享給更多人或打賞支持！",
 
 	[Key.shareOnSocial]: "文章分享",
 	[Key.shareOnSocialDescription]: "如果這篇文章對你有幫助，歡迎分享給更多人！",
@@ -482,7 +465,6 @@ export const zh_TW: Translation = {
 	[Key.calendarDecember]: "12月",
 	[Key.calendar]: "站點日曆",
 	[Key.calendarHeatmapWeek]: "{month}月第{week}週，{count}篇文章",
-	[Key.advertisement]: "廣告",
 
 	[Key.shareArticle]: "分享",
 	[Key.generatingPoster]: "海報生成中...",

@@ -83,7 +83,6 @@ Firefly 项目中所有可复用组件的集中管理。组件按照功能和职
 
 侧边栏中使用的各种功能小部件。
 
-- `Advertisement.astro` - 广告组件
 - `Announcement.astro` - 公告组件
 - `Calendar.astro` - 日历组件
 - `Categories.astro` - 分类组件

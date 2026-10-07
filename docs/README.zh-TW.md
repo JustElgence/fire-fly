@@ -200,8 +200,7 @@ src/
 │   ├── mermaidConfig.ts          # Mermaid 圖表配置
 │   ├── plantumlConfig.ts         # PlantUML 圖表配置
 │   ├── profileConfig.ts          # 使用者資料配置
-│   ├── sidebarConfig.ts          # 側邊欄版面配置
-│   └── sponsorConfig.ts          # 打賞配置
+│   └── sidebarConfig.ts          # 側邊欄版面配置
 ```
 
 

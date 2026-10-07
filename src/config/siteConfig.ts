@@ -33,11 +33,6 @@ const pages = resolvePageToggles({
 	vndb: false,
 	// MyAnimeList页面开关
 	mal: false,
-
-	// ── 关于 (About) ──────────────────────────────────
-
-	// 打赏页面开关
-	sponsor: false,   // 打赏页（第1步按需求关闭）
 });
 
 export const siteConfig: SiteConfig = {

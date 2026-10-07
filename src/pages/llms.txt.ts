@@ -81,12 +81,6 @@ const KEY_PAGES: KeyPage[] = [
 		descKey: I18nKey.malSubtitle,
 		pageKey: "mal",
 	},
-	{
-		labelKey: I18nKey.sponsor,
-		path: "/sponsor/",
-		descKey: I18nKey.sponsorDescription,
-		pageKey: "sponsor",
-	},
 ];
 
 export const GET: APIRoute = async ({ site }) => {

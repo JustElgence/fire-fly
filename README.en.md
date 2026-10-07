@@ -21,7 +21,6 @@
 > 
 > ![GitHub License](https://img.shields.io/github/license/CuteLeaf/Firefly)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/CuteLeaf/Firefly)
-[![Afdian Sponsor](https://img.shields.io/badge/Afdian-Sponsor%20Author-ff69b4.svg)](https://ifdian.net/a/cuteleaf)
 </div>
 
 
@@ -196,8 +195,7 @@ src/
 │   ├── mermaidConfig.ts          # Mermaid diagram configuration
 │   ├── plantumlConfig.ts         # PlantUML diagram configuration
 │   ├── profileConfig.ts          # User profile configuration
-│   ├── sidebarConfig.ts          # Sidebar layout configuration
-│   └── sponsorConfig.ts          # Sponsor configuration
+│   └── sidebarConfig.ts          # Sidebar layout configuration
 ```
 
 

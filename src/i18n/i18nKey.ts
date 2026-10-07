@@ -16,7 +16,6 @@ enum I18nKey {
 	navSocial = "navSocial",
 	navMine = "navMine",
 	navAbout = "navAbout",
-	navLinks = "navLinks",
 
 	tags = "tags",
 	categories = "categories",
@@ -406,22 +405,6 @@ enum I18nKey {
 	postListLayoutList = "postListLayoutList",
 	postListLayoutGrid = "postListLayoutGrid",
 
-	// 打赏页面
-	sponsor = "sponsor",
-	sponsorTitle = "sponsorTitle",
-	sponsorDescription = "sponsorDescription",
-	sponsorMethods = "sponsorMethods",
-	sponsorList = "sponsorList",
-	sponsorEmpty = "sponsorEmpty",
-	sponsorAmount = "sponsorAmount",
-	sponsorDate = "sponsorDate",
-	sponsorMessage = "sponsorMessage",
-	sponsorAnonymous = "sponsorAnonymous",
-	scanToSponsor = "scanToSponsor",
-	sponsorGoTo = "sponsorGoTo",
-	sponsorButton = "sponsorButton",
-	sponsorButtonText = "sponsorButtonText",
-
 	shareOnSocial = "shareOnSocial",
 	shareOnSocialDescription = "shareOnSocialDescription",
 
@@ -474,7 +457,6 @@ enum I18nKey {
 	calendarDecember = "calendarDecember",
 	calendar = "calendar",
 	calendarHeatmapWeek = "calendarHeatmapWeek",
-	advertisement = "advertisement",
 
 	shareArticle = "shareArticle",
 	generatingPoster = "generatingPoster",

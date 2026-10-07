@@ -19,7 +19,6 @@ export const ko: Translation = {
 	[Key.navSocial]: "소셜",
 	[Key.navMine]: "마이",
 	[Key.navAbout]: "소개",
-	[Key.navLinks]: "링크",
 	[Key.all]: "전체",
 
 	[Key.tags]: "태그",
@@ -419,21 +418,6 @@ export const ko: Translation = {
 	[Key.postListLayoutGrid]: "격자형",
 
 	// Sponsor Page
-	[Key.sponsor]: "후원",
-	[Key.sponsorTitle]: "저를 후원해 주세요",
-	[Key.sponsorDescription]:
-		"제 콘텐츠가 도움이 되셨다면 아래 방법으로 후원해 주세요. 여러분의 후원은 계속 창작할 수 있는 원동력이 됩니다!",
-	[Key.sponsorMethods]: "결제 방법",
-	[Key.sponsorList]: "후원자",
-	[Key.sponsorEmpty]: "아직 후원자가 없습니다",
-	[Key.sponsorAmount]: "금액",
-	[Key.sponsorDate]: "날짜",
-	[Key.sponsorMessage]: "메시지",
-	[Key.sponsorAnonymous]: "익명",
-	[Key.scanToSponsor]: "스캔하여 후원하기",
-	[Key.sponsorGoTo]: "후원하러 가기",
-	[Key.sponsorButton]: "응원 & 공유",
-	[Key.sponsorButtonText]: "이 글이 도움이 되셨다면 공유하거나 후원해 주세요!",
 
 	[Key.shareOnSocial]: "글 공유하기",
 	[Key.shareOnSocialDescription]:
@@ -488,7 +472,6 @@ export const ko: Translation = {
 	[Key.calendarDecember]: "12월",
 	[Key.calendar]: "사이트 캘린더",
 	[Key.calendarHeatmapWeek]: "{month}의 {week}주차, 게시글 {count}개",
-	[Key.advertisement]: "광고",
 
 	[Key.shareArticle]: "공유",
 	[Key.generatingPoster]: "포스터 생성 중...",
