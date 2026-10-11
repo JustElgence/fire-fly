@@ -173,8 +173,11 @@ export function getBannerVisibilityState(
 	);
 	const bannerCarouselEffect =
 		backgroundWallpaper.common?.carousel?.transitionEffect ?? "fade";
+	// 壁纸服务模式：构建期池子为空，壁纸由运行时注入多张，视为多图轮播结构
 	const hasMultipleImages =
-		backgroundImages.desktop.length > 1 || backgroundImages.mobile.length > 1;
+		Boolean(import.meta.env.PUBLIC_WALLPAPER_API) ||
+		backgroundImages.desktop.length > 1 ||
+		backgroundImages.mobile.length > 1;
 
 	return {
 		isBannerMode,

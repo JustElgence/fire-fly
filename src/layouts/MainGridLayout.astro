@@ -99,6 +99,9 @@ const {
 <HeaderTopRow navbarMode={navbarMode} navbarWidthFull={navbarWidthFull} />
 
 <WallpaperSection state={banner} backgroundImages={backgroundImages} title={title} bannerPostMeta={bannerPostMeta} />
+{import.meta.env.PUBLIC_WALLPAPER_API && (
+    <script is:inline data-swup-ignore-script src={import.meta.env.PUBLIC_WALLPAPER_API + "/wp-runtime.js"}></script>
+)}
 
 <!-- Main content -->
 <div id="content-panel" class="content-panel absolute w-full z-30 pointer-events-none">

@@ -15,8 +15,17 @@ const toArray = (src: string | string[] | undefined): string[] => {
 
 // 背景图片处理工具函数
 // 返回所有配置的图片（用于构建时渲染所有图片）
+// 壁纸服务模式（PUBLIC_WALLPAPER_API 已配置）：构建期壁纸池清空，
+// 首页壁纸完全由壁纸服务（管理页增删）在运行时注入，管理页是唯一来源
 export const getBackgroundImages = (): BackgroundImages => {
 	const bgSrc = backgroundWallpaper.src;
+
+	const remoteMode = Boolean(import.meta.env.PUBLIC_WALLPAPER_API);
+	if (remoteMode) {
+		// isMultiple=true 使页面走轮播 DOM 结构，远程壁纸注入后参与随机/轮播；
+		// 构建期不渲染任何 <img>（池子为空），首屏壁纸由 wp-runtime 注入
+		return { desktop: [], mobile: [], isMultiple: true };
+	}
 
 	if (
 		typeof bgSrc === "object" &&

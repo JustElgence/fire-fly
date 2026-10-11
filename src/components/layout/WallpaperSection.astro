@@ -410,25 +410,41 @@ const wallpaperPosition = state.isFullscreenMode
                 }
             });
 
-            // 随机首张：只有被抽中的这一张会真的下载，其余仍留在 <template> 里
-            var slides = getVisibleSlides();
-            var startIdx = slides.length > 1 ? Math.floor(Math.random() * slides.length) : 0;
-            var firstSlide = slides[startIdx];
-            // .slide-item 自带 1000ms 的 opacity 过渡，首张不该吃它（它是 LCP 元素）。
-            // 必须在下面加 active 之前就关掉，否则过渡已经启动了。
-            if (firstSlide) firstSlide.style.transition = 'none';
-            for (var k = 0; k < slides.length; k++) {
-                if (k === startIdx) slides[k].classList.add('active');
-                else slides[k].classList.remove('active');
+            // 随机首张：只有被抽中的这一张会真的下载，其余仍留在 <template> 里。
+            // 远程壁纸（wp-runtime）与构建期壁纸一起参与抽奖：先等待其注入完成
+            // （或 600ms 超时兜底，避免壁纸服务不可用时阻塞首屏）
+            var remoteReady = false;
+            var onRemoteReady = function () { remoteReady = true; };
+            window.addEventListener('wallpaperRemoteReady', onRemoteReady);
+            function pickFirstSlide() {
+                var slides = getVisibleSlides();
+                var startIdx = slides.length > 1 ? Math.floor(Math.random() * slides.length) : 0;
+                var firstSlide = slides[startIdx];
+                // .slide-item 自带 1000ms 的 opacity 过渡，首张不该吃它（它是 LCP 元素）。
+                // 必须在下面加 active 之前就关掉，否则过渡已经启动了。
+                if (firstSlide) firstSlide.style.transition = 'none';
+                for (var k = 0; k < slides.length; k++) {
+                    if (k === startIdx) slides[k].classList.add('active');
+                    else slides[k].classList.remove('active');
+                }
+                materialize(firstSlide, true);
+                if (firstSlide) {
+                    // 下一帧再放开，后续轮播切换的交叉淡入照旧。双 rAF 是为了确保
+                    // opacity:1 已经 flush 成新的 before-change style，恢复时不会倒着跑一遍
+                    requestAnimationFrame(function () {
+                        requestAnimationFrame(function () { firstSlide.style.transition = ''; });
+                    });
+                }
             }
-            materialize(firstSlide, true);
-            if (firstSlide) {
-                // 下一帧再放开，后续轮播切换的交叉淡入照旧。双 rAF 是为了确保
-                // opacity:1 已经 flush 成新的 before-change style，恢复时不会倒着跑一遍
-                requestAnimationFrame(function () {
-                    requestAnimationFrame(function () { firstSlide.style.transition = ''; });
-                });
+            var firstPickDone = false;
+            function pickWhenRemoteSettled() {
+                if (firstPickDone) return;
+                firstPickDone = true;
+                window.removeEventListener('wallpaperRemoteReady', onRemoteReady);
+                pickFirstSlide();
             }
+            setTimeout(pickWhenRemoteSettled, 600);
+            var __firstSlideGuard = function () { pickWhenRemoteSettled(); };
 
             // 断点跨过 1024px 时，另一侧那组还没有实例化过的 active，需要补上
             if (window.matchMedia) {
@@ -453,16 +469,38 @@ const wallpaperPosition = state.isFullscreenMode
             if (isCarouselEnabled()) {
                 var schedulePrefetch = function () {
                     var idle = window.requestIdleCallback || function (cb) { return setTimeout(cb, 1500); };
-                    idle(function () { materializeAhead(getVisibleSlides(), startIdx); });
+                    idle(function () {
+                        var s = getVisibleSlides();
+                        materializeAhead(s, getCurrentIndex(s));
+                    });
                 };
                 if (document.readyState === 'complete') schedulePrefetch();
                 else window.addEventListener('load', schedulePrefetch, { once: true });
             }
 
-            // 启动
-            if (isCarouselEnabled() && isBannerWallpaperMode()) {
-                startAutoPlay();
-            }
+            // 远程壁纸注入后重新同步：wp-runtime 会追加 .slide-item 并派发此事件；
+            // slides 都是查询时动态获取的，这里只需恢复自动轮播的节奏
+            window.addEventListener('wallpaperRemoteSync', function () {
+                if (appState.isPlaying) {
+                    stopAutoPlay();
+                    startAutoPlay();
+                }
+                __firstSlideGuard();
+            });
+
+            // 启动（等待远程壁纸注入就绪或超时，再抽首图 + 启动轮播）
+            window.addEventListener('wallpaperRemoteReady', function () {
+                pickWhenRemoteSettled();
+                if (isCarouselEnabled() && isBannerWallpaperMode() && !appState.isPlaying) {
+                    startAutoPlay();
+                }
+            });
+            setTimeout(function () {
+                pickWhenRemoteSettled();
+                if (isCarouselEnabled() && isBannerWallpaperMode() && !appState.isPlaying) {
+                    startAutoPlay();
+                }
+            }, 650);
         })();
     </script>
     )}
