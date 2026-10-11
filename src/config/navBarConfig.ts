@@ -87,6 +87,14 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 				icon: "material-symbols:build",
 				external: true,
 			},
+
+			// 壁纸管理(WebDAV 管理页,需 Basic 认证)
+			{
+				name: "壁纸",
+				url: "/wp/admin.html",
+				icon: "material-symbols:wallpaper",
+				external: true,
+			},
 		],
 	});
 
