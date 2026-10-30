@@ -88,9 +88,9 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 				external: true,
 			},
 
-			// 壁纸管理(WebDAV 管理页,需 Basic 认证)
+			// 壁纸管理(WebDAV 管理页,需 Basic 认证，仅站长用)
 			{
-				name: "壁纸",
+				name: "壁纸管理",
 				url: "/wp/admin.html",
 				icon: "material-symbols:wallpaper",
 				external: true,
