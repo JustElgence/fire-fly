@@ -19,6 +19,7 @@ Firefly is a feature-rich static blog theme built on **Astro 7** with **Svelte 5
 | `pnpm format` | Biome format |
 | `pnpm new-post <filename>` | Scaffold a new blog post |
 | `pnpm new-dynamic` (`new-d`) | Scaffold a new dynamic (microblog) entry |
+| `pnpm check-memos` | Memos 接入自检：API 可达性 / CORS / 实际 creator 值（见 `deploy/memos/README.md`） |
 | `pnpm lqips` | Regenerate LQIP data into `src/constants/lqips.json` |
 
 Package manager is **pnpm** (enforced). Node.js >= 22 required.
