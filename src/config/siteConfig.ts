@@ -42,8 +42,8 @@ export const siteConfig: SiteConfig = {
 	// 站点副标题
 	subtitle: "记录吃过的饭、走过的路、拍下的光",
 
-	// 站点 URL（部署在 teardrop.cn 的 /firefly/ 子路径下）
-	site_url: "https://teardrop.cn/firefly/",
+	// 站点 URL（独立子域名部署）
+	site_url: "https://blog.teardrop.cn",
 
 	// 站点描述
 	description:

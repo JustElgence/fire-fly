@@ -66,8 +66,8 @@ const adapter = process.env.CF_WORKERS
 	: undefined;
 
 // https://astro.build/config
-// 子路径部署 base；sitemap 过滤也依赖它剥前缀，勿内联重复书写
-const basePath = "/firefly/";
+// 子路径部署 base（独立子域名部署时为 "/"）；sitemap 过滤也依赖它剥前缀，勿内联重复书写
+const basePath = "/";
 
 export default defineConfig({
 	site: siteConfig.site_url,
