@@ -24,16 +24,18 @@ export const dynamicConfig: DynamicConfig = {
 
 	// ========== Memos 配置 ==========
 	// 启用后客户端会直接从 Memos API 实时获取数据，apiUrl 配置将被忽略
-	// Memos 记得配置 CORS，否则可能会出现跨域问题
+	// 部署指引与一键套件见 deploy/memos/README.md；
+	// 即使 Memos 未就绪或实例故障，动态页与侧栏也会自动兑底到本地动态数据，不会空白
 	memos: {
-		// 是否启用 Memos 数据源
+		// 是否启用 Memos 数据源（部署并导入完成后改为 true）
 		enable: false,
 
-		// Memos 实例地址
-		apiUrl: "https://memos.example.com",
+		// Memos 实例地址（deploy/memos 套件默认使用 memos.teardrop.cn，按实际修改）
+		apiUrl: "https://memos.teardrop.cn",
 
 		// Memos 用户标识，如 "users/你的memos用户名"，用于过滤指定用户的动态
 		// 注意：需与 Memos API 返回的 creator 字段完全一致（区分大小写），例如实际用户名为 admin 时应为 "users/admin"，而非"users/Admin"
-		parent: "users/xiaye",
+		// 部署后运行 `pnpm check-memos` 可直接查出正确的 creator 值
+		parent: "users/teardrop",
 	},
 };
