@@ -66,10 +66,13 @@ const adapter = process.env.CF_WORKERS
 	: undefined;
 
 // https://astro.build/config
+// 子路径部署 base；sitemap 过滤也依赖它剥前缀，勿内联重复书写
+const basePath = "/firefly/";
+
 export default defineConfig({
 	site: siteConfig.site_url,
 
-	base: "/firefly/",
+	base: basePath,
 	trailingSlash: "always",
 
 	// 字体配置 - 只加载实际使用的字体，跳过未引用的以加快构建
@@ -238,7 +241,11 @@ export default defineConfig({
 			filter: (page) => {
 				// 根据页面开关配置过滤sitemap
 				const url = new URL(page);
-				const pathname = url.pathname;
+				// sitemap 里的路径带 base 前缀（如 /firefly/friends/），先剥掉再和页面开关比对，
+				// 否则下方所有等值判断都会失配，已关闭的页面会漏进 sitemap
+				const pathname = url.pathname.startsWith(basePath)
+					? url.pathname.slice(basePath.length - 1)
+					: url.pathname;
 				if (pathname === "/dynamic/" && !siteConfig.pages.dynamic) {
 					return false;
 				}
@@ -264,6 +271,9 @@ export default defineConfig({
 					return false;
 				}
 				if (pathname === "/myanimelist/" && !siteConfig.pages.mal) {
+					return false;
+				}
+				if (pathname.startsWith("/projects/") && !siteConfig.pages.projects) {
 					return false;
 				}
 				// 动态页评论嵌入页：评论关闭时重定向到 /404/，不应进 sitemap
