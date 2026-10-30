@@ -1,9 +1,14 @@
-// TODO: giscus 需要用户提供公开仓库名后配置（当前 type 为 "none"，评论系统关闭）
+// giscus 已指向本站源码仓库 JustElgence/fire-fly（repoId 已从 GitHub API 获取）。
+// 首次启用前还需在 GitHub 仓库完成 3 步（见 https://giscus.app/zh-CN）：
+//   1. 仓库 Settings → General → Features → 勾选 Discussions
+//   2. 安装 giscus App：https://github.com/apps/giscus
+//   3. 在 https://giscus.app/zh-CN 输入 JustElgence/fire-fly，
+//      选择讨论分类 General，把页面下方的 data-category-id 填入 categoryId
 import type { CommentConfig } from "../types/commentConfig";
 
 export const commentConfig: CommentConfig = {
 	// 评论系统类型: none, twikoo, waline, giscus, disqus, artalk，默认为none，即不启用评论系统
-	type: "none",
+	type: "giscus",
 
 	//twikoo评论系统配置
 	twikoo: {
@@ -54,16 +59,18 @@ export const commentConfig: CommentConfig = {
 
 	//giscus评论系统配置
 	giscus: {
-		// 设置 Giscus 评论系统仓库
-		repo: "CuteLeaf/Firefly",
-		// 设置 Giscus 评论系统仓库ID
-		repoId: "R_kgD2gfdFGd",
+		// 设置 Giscus 评论系统仓库（本站源码仓库，公开）
+		repo: "JustElgence/fire-fly",
+		// 设置 Giscus 评论系统仓库ID（来自 GitHub API 的 repo node_id）
+		repoId: "R_kgDOQ5k4-A",
 		// 设置 Giscus 评论系统分类
 		category: "General",
 		// 获取 Giscus 评论系统分类ID
-		categoryId: "DIC_kwDOKy9HOc4CegmW",
+		// TODO: 仓库开启 Discussions 后，从 https://giscus.app/zh-CN 获取 General 分类的 ID 填入
+		categoryId: "DIC_TODO_需要从giscus.app获取",
 		// 获取 Giscus 评论系统映射方式
-		mapping: "title",
+		// pathname：按页面路径绑定讨论串，标题改动不会丢评论
+		mapping: "pathname",
 		// 获取 Giscus 评论系统严格模式
 		strict: "0",
 		// 获取 Giscus 评论系统反应功能
