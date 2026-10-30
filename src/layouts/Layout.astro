@@ -137,7 +137,8 @@ let ogImageWidth: number | undefined;
 let ogImageHeight: number | undefined;
 const isGeneratedOg = siteConfig.post.generateOgImages && postSlug;
 if (isGeneratedOg) {
-	ogImageUrl = new URL(`/og/${postSlug}.png`, Astro.site).toString();
+	// 走 url() 拼上 BASE_URL，保证与 og:url/canonical 一致地带 base 前缀（子路径部署时 /og/ 裸路径不可达）
+	ogImageUrl = new URL(url(`/og/${postSlug}.png`), Astro.site).toString();
 	ogImageWidth = 1200;
 	ogImageHeight = 630;
 } else if (postCoverImage) {
