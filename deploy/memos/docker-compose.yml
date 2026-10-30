@@ -1,0 +1,12 @@
+# Memos 一键部署（仅实例本体）
+# 用法见同目录 README.md；反向代理与 CORS 由宿主机已有 Nginx 承担（见 nginx-memos.conf），
+# 因此这里把端口只绑定在 127.0.0.1，不直接暴露公网。
+services:
+  memos:
+    image: neosmemo/memos:stable
+    container_name: memos
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5230:5230"
+    volumes:
+      - ./data:/var/opt/memos
