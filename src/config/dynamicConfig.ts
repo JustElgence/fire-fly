@@ -28,7 +28,7 @@ export const dynamicConfig: DynamicConfig = {
 	// 即使 Memos 未就绪或实例故障，动态页与侧栏也会自动兑底到本地动态数据，不会空白
 	memos: {
 		// 是否启用 Memos 数据源（部署并导入完成后改为 true）
-		enable: false,
+		enable: true,
 
 		// Memos 实例地址（deploy/memos 套件默认使用 memos.teardrop.cn，按实际修改）
 		apiUrl: "https://memos.teardrop.cn",
