@@ -18,6 +18,7 @@
     "new-d": "tsx scripts/new-dynamic.js",
     "new-post": "node scripts/new-post.js",
     "check-memos": "tsx scripts/check-memos.ts",
+    "memo-to-post": "tsx scripts/memo-to-post.ts",
     "format": "biome format --write ./src ./scripts",
     "lint": "biome check --write ./src ./scripts",
     "preinstall": "npx only-allow pnpm",
