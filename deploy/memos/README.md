@@ -81,6 +81,9 @@ pnpm check-memos
   `POST /api/v1/auth/signin`（无连字符），body 为 `{"passwordCredentials":{"username":...,"password":...}}`，
   返回 `accessToken`，后续请求带 `Authorization: Bearer`。
 - 管理员账号 `teardrop` 已创建，旧 4 条动态已导入并回填原始时间戳（10-11 两条共用 12:00，可在 UI 微调）。
+- **注册开关（教训）**：实例上线后必须立即关闭注册——`PATCH /api/v1/instance/settings/GENERAL?updateMask=general_setting`，
+  body 里 `generalSetting.disallowUserRegistration: true`。本实例上线 30 分钟内即被扫描器抢注了一个账号
+  （删除用 `DELETE /api/v1/users/{id}?force=true`，注意路径参数是裸 ID，不是 `users/{id}` 资源名）。
 
 ## 日常备份
 
