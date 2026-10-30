@@ -29,14 +29,30 @@ import { url } from "@/utils/url-utils";
                 {i18n(I18nKey.notFoundDescription)}
             </p>
             
-            <!-- 返回首页按钮 -->
-            <a 
-                href={url("/")}
-                class="inline-flex items-center gap-2 px-6 py-3 bg-(--primary) text-white rounded-(--radius-large) hover:bg-(--btn-content) transition-colors duration-200 font-medium"
-            >
-                <Icon name="material-symbols:home" class="text-xl" />
-                {i18n(I18nKey.backToHome)}
-            </a>
+            <!-- 操作按钮组 -->
+            <div class="flex flex-wrap items-center justify-center gap-3">
+                <a 
+                    href={url("/")}
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-(--primary) text-white rounded-(--radius-large) hover:bg-(--btn-content) transition-colors duration-200 font-medium"
+                >
+                    <Icon name="material-symbols:home" class="text-xl" />
+                    {i18n(I18nKey.backToHome)}
+                </a>
+                <a 
+                    href={url("/search/")}
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-(--btn-regular-bg) hover:bg-(--btn-regular-bg-hover) text-(--btn-content) rounded-(--radius-large) transition-colors duration-200 font-medium"
+                >
+                    <Icon name="material-symbols:search" class="text-xl" />
+                    {i18n(I18nKey.search)}
+                </a>
+                <a 
+                    href={url("/archive/")}
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-(--btn-regular-bg) hover:bg-(--btn-regular-bg-hover) text-(--btn-content) rounded-(--radius-large) transition-colors duration-200 font-medium"
+                >
+                    <Icon name="material-symbols:archive" class="text-xl" />
+                    {i18n(I18nKey.archive)}
+                </a>
+            </div>
             
             <!-- 装饰性元素 -->
             <div class="absolute top-4 left-4 opacity-10">
