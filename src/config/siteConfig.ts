@@ -118,8 +118,8 @@ export const siteConfig: SiteConfig = {
 		navbarMode: "dynamic",
 	},
 
-	// 站点开始日期，用于统计运行天数
-	siteStartDate: "2025-01-01",
+	// 站点开始日期，用于统计运行天数（2026-10-03 开博，对应《开博记：把日子记下来》）
+	siteStartDate: "2026-10-03",
 
 	// 站点时区（IANA 时区字符串），用于格式化bangumi、rss里的构建日期时间等等..
 	// 示例："Asia/Shanghai", "UTC", 如果为空，则按照构建服务器的时区进行时区转换
