@@ -43,7 +43,13 @@ onMount(async () => {
 	try {
 		let data: DynamicEntry[];
 		if (memos?.enable) {
-			data = await fetchMemos(memos.apiUrl, { parent: memos.parent });
+			try {
+				data = await fetchMemos(memos.apiUrl, { parent: memos.parent });
+				// 与 DynamicFeed 一致：Memos 失败或为空时兑底到本地数据，避免侧栏开天窗
+				if (data.length === 0) data = await fetchWithDedup(apiUrl);
+			} catch {
+				data = await fetchWithDedup(apiUrl);
+			}
 		} else {
 			data = await fetchWithDedup(apiUrl);
 		}

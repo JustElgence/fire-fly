@@ -68,6 +68,16 @@ const pageEntries = $derived(
 	filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
 );
 
+/**
+ * 从本地数据源（构建时生成的 /api/dynamic.json）拉取动态。
+ * 作为 Memos 不可用时的兑底：实例未部署、网络故障或 CORS 未配好时页面不开天窗。
+ */
+async function loadLocalEntries(): Promise<DynamicData[]> {
+	const response = await fetch(source);
+	if (!response.ok) throw new Error(`HTTP ${response.status}`);
+	return (await response.json()) as DynamicData[];
+}
+
 function pageFromUrl() {
 	return Math.max(
 		1,
@@ -286,11 +296,25 @@ onMount(() => {
 	const load = async () => {
 		try {
 			if (memos?.enable) {
-				entries = await fetchMemos(memos.apiUrl, { parent: memos.parent });
+				try {
+					entries = await fetchMemos(memos.apiUrl, { parent: memos.parent });
+					// Memos 返回空列表通常意味着实例刚部署还没迁移数据，或 parent 与实际 creator 不符，
+					// 此时同样回退到本地数据，避免动态页意外空白
+					if (entries.length === 0) {
+						console.warn(
+							"[Dynamic] Memos 返回为空，已回退到本地动态数据（检查 Memos 实例是否已导入内容，以及 parent 配置是否与 creator 一致）",
+						);
+						entries = await loadLocalEntries();
+					}
+				} catch (memosError) {
+					console.warn(
+						"[Dynamic] Memos 拉取失败，已回退到本地动态数据",
+						memosError,
+					);
+					entries = await loadLocalEntries();
+				}
 			} else {
-				const response = await fetch(source);
-				if (!response.ok) throw new Error(`HTTP ${response.status}`);
-				entries = (await response.json()) as DynamicData[];
+				entries = await loadLocalEntries();
 			}
 			// 更新页面计数
 			const countEl = document.querySelector("[data-dynamic-page-count]");
