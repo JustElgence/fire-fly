@@ -1,20 +1,17 @@
 /**
- * memo-to-post：把一条 Memos 动态转正为博客文章
+ * memo-to-post：把 Memos 动态转正为博客文章
  *
- * 用法：
+ * 手动模式（转指定一条）：
  *   pnpm memo-to-post --list                          # 列出最近动态，挑一条
  *   pnpm memo-to-post <memo链接或ID> [选项]
  *   pnpm memo-to-post https://memos.teardrop.cn/m/1781 --dry-run
  *   pnpm memo-to-post 1781 --title "周末去了西湖" --draft
+ *   选项：--title --category --tags --description --slug --draft --dry-run
  *
- * 选项：
- *   --title <标题>      手动指定标题（默认取正文首个非图片行，剥掉 Markdown 符号）
- *   --category <分类>   文章分类，默认「日常」
- *   --tags <a,b>        额外标签；正文里的 #标签 也会自动收进 frontmatter（正文原样保留）
- *   --description <文本> 摘要（默认截取正文前 60 字）
- *   --slug <slug>       自定义文件名（默认 YYYY-MM-DD-xxxxxx，与 Studio 生成风格一致）
- *   --draft             生成草稿（draft: true，不出现在站点）
- *   --dry-run           只预览生成的文件内容，不落盘
+ * 自动模式（配合 GitHub Actions 定时任务，无需参数）：
+ *   pnpm memo-to-post --auto
+ *   扫描 Memos，把带 #转文章 标记的动态自动转成文章文件（默认直接发布态），
+ *   已处理的记入仓库根目录 .memo-to-post-state.json，不会重复转正。
  *
  * 转正后 Memos 原文不动；发布仍需去 Studio 点一次构建（或 pnpm build）。
  */
@@ -26,19 +23,38 @@ import { dynamicConfig } from "../src/config";
 const OK = "\x1b[32m✓\x1b[0m";
 const FAIL = "\x1b[31m✗\x1b[0m";
 
+/** 自动转正的触发标记：动态正文里带 #转文章 即视为要发布成文章 */
+const POST_MARKER = process.env.MEMO_POST_TAG || "转文章";
+const STATE_FILE = ".memo-to-post-state.json";
+
 interface Memo {
 	name: string;
 	createTime: string;
 	content: string;
 }
 
-/** 解析命令行参数 */
+interface State {
+	processed: Record<string, { slug?: string; skipped?: string }>;
+}
+
+interface ConvertOptions {
+	title?: string;
+	category?: string;
+	tags?: string[];
+	description?: string;
+	slug?: string;
+	draft?: boolean;
+	dryRun?: boolean;
+	/** 从正文里剔除的标记词（如「转文章」），同时不会进入文章 tags */
+	stripMarkers?: string[];
+}
+
 function parseArgs(argv: string[]) {
 	const args: Record<string, string | boolean> = {};
 	const positional: string[] = [];
 	for (let i = 0; i < argv.length; i++) {
 		const a = argv[i];
-		if (a === "--list" || a === "--draft" || a === "--dry-run") {
+		if (a === "--list" || a === "--draft" || a === "--dry-run" || a === "--auto") {
 			args[a.slice(2)] = true;
 		} else if (a.startsWith("--")) {
 			const key = a.slice(2);
@@ -55,9 +71,10 @@ function parseArgs(argv: string[]) {
 	return { args, positional };
 }
 
-/** 从链接或纯 ID 中提取 memo id（支持 .../m/1781、memos/1781、1781） */
 function extractMemoId(input: string): string {
-	const m = input.match(/(?:\/m\/|memos\/)([A-Za-z0-9_-]+)\/?$/) || input.match(/^([A-Za-z0-9_-]+)$/);
+	const m =
+		input.match(/(?:\/m\/|memos\/)([A-Za-z0-9_-]+)\/?$/) ||
+		input.match(/^([A-Za-z0-9_-]+)$/);
 	if (!m) {
 		console.error(`${FAIL} 无法识别的 memo 标识：${input}（应为链接或 ID）`);
 		process.exit(1);
@@ -84,7 +101,6 @@ async function fetchMemos(): Promise<Memo[]> {
 	return data.memos ?? [];
 }
 
-/** 从 Markdown 正文提取纯文本（用于标题与摘要） */
 function plainText(markdown: string): string {
 	return markdown
 		.replace(/!\[[^\]]*\]\([^)]+\)/g, " ")
@@ -94,7 +110,6 @@ function plainText(markdown: string): string {
 		.trim();
 }
 
-/** 标题：首个非空且非图片的行，剥掉行首 Markdown 标记 */
 function pickTitle(content: string): string | undefined {
 	for (const raw of content.split("\n")) {
 		const line = raw.trim();
@@ -105,15 +120,92 @@ function pickTitle(content: string): string | undefined {
 	return undefined;
 }
 
-/** YAML 双引号安全转义 */
 function yamlQuote(text: string): string {
 	return `"${text.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
+async function exists(filePath: string): Promise<boolean> {
+	try {
+		await fs.access(filePath);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+async function loadState(): Promise<State> {
+	try {
+		return JSON.parse(await fs.readFile(STATE_FILE, "utf8")) as State;
+	} catch {
+		return { processed: {} };
+	}
+}
+
+async function saveState(state: State): Promise<void> {
+	await fs.writeFile(STATE_FILE, `${JSON.stringify(state, null, "\t")}\n`, "utf8");
+}
+
+/** 把一条 memo 转成文章文件，返回 slug */
+async function convertMemo(memo: Memo, state: State, options: ConvertOptions = {}): Promise<string> {
+	let content = memo.content;
+	for (const marker of options.stripMarkers ?? []) {
+		content = content.replace(new RegExp(`(?<=^|\\s)#${marker}(?=\\s|$)`, "g"), "").replace(/[ \t]+\n/g, "\n");
+	}
+
+	const title = options.title || pickTitle(content);
+	if (!title) {
+		throw new Error("正文里找不到可作标题的文字行，请用 --title 指定");
+	}
+
+	const inlineTags = [...content.matchAll(/(?<=^|\s)#([^\s#.,!?，。！？]+)/g)].map((m) => m[1]);
+	const tags = [
+		...new Set([
+			...(options.tags ?? []),
+			...inlineTags.filter((t) => !(options.stripMarkers ?? []).includes(t)),
+		]),
+	]
+		.filter(Boolean)
+		.slice(0, 8);
+
+	const bodyText = plainText(content);
+	const description = options.description || `${bodyText.slice(0, 60)}${bodyText.length > 60 ? "…" : ""}`;
+
+	const datePart = memo.createTime.slice(0, 10);
+	let slug = options.slug || `${datePart}-${randomBytes(3).toString("hex")}`;
+	let filePath = path.resolve("src/content/posts", `${slug}.md`);
+	while (await exists(filePath)) {
+		slug = `${datePart}-${randomBytes(3).toString("hex")}`;
+		filePath = path.resolve("src/content/posts", `${slug}.md`);
+	}
+
+	const category = options.category || "日常";
+	const tagsLine = tags.length > 0 ? `\ntags: [${tags.map(yamlQuote).join(", ")}]` : "";
+	const file = `---
+title: ${yamlQuote(title)}
+published: ${datePart}
+description: ${yamlQuote(description)}
+category: ${yamlQuote(category)}${tagsLine}
+draft: ${options.draft ? "true" : "false"}
+---
+
+${content.trimEnd()}
+`;
+
+	if (options.dryRun) {
+		console.log(`\n${OK} 预览（--dry-run，未写文件）：将创建 src/content/posts/${slug}.md\n`);
+		console.log(file);
+		return slug;
+	}
+
+	await fs.mkdir(path.dirname(filePath), { recursive: true });
+	await fs.writeFile(filePath, file, "utf8");
+	state.processed[memo.name] = { slug };
+	console.log(`  ${OK} ${memo.name} -> src/content/posts/${slug}.md（${title}）`);
+	return slug;
+}
+
 async function main() {
 	const { args, positional } = parseArgs(process.argv.slice(2));
-	const memos = dynamicConfig.memos;
-	const apiUrl = memos.apiUrl.replace(/\/+$/, "");
 
 	// ---- --list：列出最近动态供挑选 ----
 	if (args.list) {
@@ -122,7 +214,7 @@ async function main() {
 			console.log("实例暂无动态");
 			return;
 		}
-		console.log(`最近 ${all.length} 条动态（memos.teardrop.cn 的 memo id 取链接末段）：`);
+		console.log(`最近 ${all.length} 条动态：`);
 		for (const memo of all.slice(0, 20)) {
 			const id = memo.name.split("/").pop();
 			const preview = plainText(memo.content).slice(0, 30) || "（仅图片）";
@@ -131,14 +223,53 @@ async function main() {
 		return;
 	}
 
-	// ---- 转正流程 ----
+	const state = await loadState();
+	let stateDirty = false;
+
+	// ---- --auto：扫描全部动态，转正带 #转文章 标记的 ----
+	if (args.auto) {
+		const all = await fetchMemos();
+		const pending = all.filter(
+			(memo) =>
+				!state.processed[memo.name] &&
+				new RegExp(`(?<=^|\\s)#${POST_MARKER}(?=\\s|$)`).test(memo.content),
+		);
+		console.log(
+			`扫描 ${all.length} 条动态，${pending.length} 条带 #${POST_MARKER} 标记待转正`,
+		);
+		if (pending.length === 0) return;
+
+		for (const memo of pending) {
+			try {
+				await convertMemo(memo, state, { draft: !!args.draft, stripMarkers: [POST_MARKER] });
+				stateDirty = true;
+			} catch (error) {
+				// 无标题等不可转正的内容也记入状态，避免每次运行都重试
+				state.processed[memo.name] = {
+					skipped: error instanceof Error ? error.message : String(error),
+				};
+				stateDirty = true;
+				console.warn(`  ${FAIL} 跳过 ${memo.name}：${error instanceof Error ? error.message : String(error)}`);
+			}
+		}
+
+		if (!args["dry-run"] && stateDirty) {
+			await saveState(state);
+			console.log(`${OK} 状态已写入 ${STATE_FILE}`);
+			console.log("下一步：去 Studio 点「发布并构建」上线");
+		}
+		return;
+	}
+
+	// ---- 手动模式：转指定一条 ----
 	if (positional.length === 0) {
-		console.error(`${FAIL} 缺少 memo 链接或 ID。先用 pnpm memo-to-post --list 挑一条`);
+		console.error(`${FAIL} 缺少 memo 链接或 ID。先用 pnpm memo-to-post --list 挑一条，或用 --auto 自动扫描`);
 		process.exit(1);
 	}
 	const memoId = extractMemoId(positional[0]);
 
-	console.log(`正在从 ${apiUrl} 获取 memo ${memoId} ...`);
+	const memos = dynamicConfig.memos;
+	console.log(`正在从 ${memos.apiUrl} 获取 memo ${memoId} ...`);
 	const all = await fetchMemos();
 	const memo = all.find((m) => m.name.split("/").pop() === memoId);
 	if (!memo) {
@@ -148,62 +279,24 @@ async function main() {
 		process.exit(1);
 	}
 
-	const content = memo.content;
-	const title = (args.title as string) || pickTitle(content);
-	if (!title) {
-		console.error(`${FAIL} 正文里找不到可作标题的文字行，请用 --title 指定`);
-		process.exit(1);
+	const slug = await convertMemo(memo, state, {
+		title: args.title as string | undefined,
+		category: args.category as string | undefined,
+		tags: args.tags ? String(args.tags).split(",").map((t) => t.trim()).filter(Boolean) : undefined,
+		description: args.description as string | undefined,
+		slug: args.slug as string | undefined,
+		draft: !!args.draft,
+		dryRun: !!args["dry-run"],
+		stripMarkers: [POST_MARKER],
+	});
+
+	if (!args["dry-run"]) {
+		state.processed[memo.name] = { slug };
+		await saveState(state);
+		stateDirty = true;
+		console.log(`   下一步：Studio 点「发布并构建」上线${args.draft ? "（草稿不会显示，写完把 draft 改 false 再构建）" : ""}`);
 	}
-
-	// 标签：--tags 传入 + 正文 #标签 自动收集（正文不动）
-	const inlineTags = [...content.matchAll(/(?<=^|\s)#([^\s#.,!?，。！？]+)/g)].map((m) => m[1]);
-	const tags = [
-		...new Set([...(args.tags ? String(args.tags).split(",").map((t) => t.trim()) : []), ...inlineTags]),
-	].filter(Boolean).slice(0, 8);
-
-	const description =
-		(args.description as string) || `${plainText(content).slice(0, 60)}${plainText(content).length > 60 ? "…" : ""}`;
-
-	// slug：YYYY-MM-DD-xxxxxx，与 Studio 生成风格一致；已存在则再随机
-	const datePart = memo.createTime.slice(0, 10).replaceAll("-", "-");
-	let slug = (args.slug as string) || `${datePart}-${randomBytes(3).toString("hex")}`;
-	let filePath = path.resolve("src/content/posts", `${slug}.md`);
-	while (await fs.access(filePath).then(
-		() => true,
-		() => false,
-	)) {
-		slug = `${datePart}-${randomBytes(3).toString("hex")}`;
-		filePath = path.resolve("src/content/posts", `${slug}.md`);
-	}
-
-	const draft = args.draft ? "true" : "false";
-	const category = (args.category as string) || "日常";
-	const tagsLine = tags.length > 0 ? `\ntags: [${tags.map(yamlQuote).join(", ")}]` : "";
-
-	const file = `---
-title: ${yamlQuote(title)}
-published: ${datePart}
-description: ${yamlQuote(description)}
-category: ${yamlQuote(category)}${tagsLine}
-draft: ${draft}
----
-
-${content}
-`;
-
-	if (args["dry-run"]) {
-		console.log(`\n${OK} 预览（--dry-run，未写文件）：将创建 src/content/posts/${slug}.md\n`);
-		console.log(file);
-		return;
-	}
-
-	await fs.mkdir(path.dirname(filePath), { recursive: true });
-	await fs.writeFile(filePath, file, "utf8");
-
-	console.log(`\n${OK} 文章已生成：src/content/posts/${slug}.md`);
-	console.log(`   标题：${title}`);
-	console.log(`   分类：${category}${tags.length > 0 ? `　标签：${tags.join(" / ")}` : ""}${draft === "true" ? "　（草稿）" : ""}`);
-	console.log(`   下一步：Studio 点「发布并构建」上线${draft === "true" ? "（草稿不会显示，写完把 draft 改 false 再构建）" : ""}`);
+	void stateDirty;
 }
 
 main().catch((error: unknown) => {

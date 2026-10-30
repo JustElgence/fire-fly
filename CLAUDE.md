@@ -20,7 +20,7 @@ Firefly is a feature-rich static blog theme built on **Astro 7** with **Svelte 5
 | `pnpm new-post <filename>` | Scaffold a new blog post |
 | `pnpm new-dynamic` (`new-d`) | Scaffold a new dynamic (microblog) entry |
 | `pnpm check-memos` | Memos 接入自检：API 可达性 / CORS / 实际 creator 值（见 `deploy/memos/README.md`） |
-| `pnpm memo-to-post` | 把一条 Memos 动态转正为文章：`--list` 挑选、`--dry-run` 预览、`--draft` 存草稿 |
+| `pnpm memo-to-post` | Memos 动态转正为文章：`--auto` 自动扫描 #转文章 标记、`--list` 挑选、`--dry-run` 预览、`--draft` 存草稿；仓库 Actions 每 30 分钟自动跑一次 `--auto` |
 | `pnpm lqips` | Regenerate LQIP data into `src/constants/lqips.json` |
 
 Package manager is **pnpm** (enforced). Node.js >= 22 required.

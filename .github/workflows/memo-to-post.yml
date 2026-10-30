@@ -1,0 +1,46 @@
+name: Memos 转文章
+
+# 每 30 分钟扫一次 Memos，把带 #转文章 标记的动态自动转成文章文件提交进仓库；
+# 也可以在 Actions 页面手动 Run workflow 立即触发。
+# 转正后仍需去 Studio 点构建（构建自动化属另行改造）。
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: memo-to-post
+  cancel-in-progress: false
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 扫描并转正 Memos 文章
+        run: pnpm memo-to-post --auto
+
+      - name: 提交转正结果
+        run: |
+          git config user.name "memo-to-post bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && echo "没有新的转正内容" || (
+            git commit -m "content: 自动转正 Memos 文章" &&
+            git push
+          )
