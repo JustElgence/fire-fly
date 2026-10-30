@@ -65,6 +65,23 @@ pnpm check-memos
 把 `memos.enable` 改回 `false` 重新构建即可；运行时即使 Memos 宕机，页面也会自动回退到本地数据。
 彻底卸载：`docker compose down` + 删掉 Nginx 配置 + 删 DNS 记录。
 
+## 实际部署记录（2026-10-30，与上文通用步骤的差异）
+
+本实例最终部署在 **14.103.98.164**（DNS 已指向该机），与通用步骤的差异：
+
+- **入口是 Nginx Proxy Manager（NPM）**：该机公网 80/443 由 NPM 容器占据，主机 nginx 不在流量路径。
+  Memos 在 NPM 里以 proxy host 挂载（forward 到 `172.17.0.1:5230`），证书由 NPM 自动签发，
+  CORS 高级配置与本文 `nginx-memos.conf` 内容一致。
+- **compose 端口绑定改为 `172.17.0.1:5230:5230`**（docker 网桥地址），否则 NPM 容器无法回源到宿主机端口。
+- **必须设置 `MEMOS_INSTANCE_URL=https://memos.teardrop.cn`**（0.30+ 行为）：
+  未设置时匿名访客读不到公开动态；且 ACCESS 访问模式在首次启动时就按"有无 URL"固化，
+  本实例固化成了 PRIVATE，事后通过 API 补救：
+  `PATCH /api/v1/instance/settings/ACCESS?updateMask=access_mode`（body 见 `accessSetting.accessMode=PUBLIC`）。
+- **0.31 API 要点**（与旧版不同）：首个管理员用 `POST /api/v1/users` 创建；登录用
+  `POST /api/v1/auth/signin`（无连字符），body 为 `{"passwordCredentials":{"username":...,"password":...}}`，
+  返回 `accessToken`，后续请求带 `Authorization: Bearer`。
+- 管理员账号 `teardrop` 已创建，旧 4 条动态已导入并回填原始时间戳（10-11 两条共用 12:00，可在 UI 微调）。
+
 ## 日常备份
 
 ```bash
