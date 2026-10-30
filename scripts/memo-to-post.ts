@@ -1,17 +1,17 @@
 /**
  * memo-to-post：把 Memos 动态转正为博客文章
  *
- * 手动模式（转指定一条）：
+ * 自动模式（配合 GitHub Actions 定时任务，无需参数）：
+ *   pnpm memo-to-post --auto
+ *   扫描 Memos，把带 #转文章 标记的动态自动转成文章文件（直接发布态）；
+ *   memo 在 Memos 里被编辑过（updateTime 变化）会自动重新同步到同一篇文章；
+ *   已处理的记入仓库根目录 .memo-to-post-state.json，不会重复转正。
+ *
+ * 手动模式（转指定一条，用于不等定时、或需要精细控制）：
  *   pnpm memo-to-post --list                          # 列出最近动态，挑一条
  *   pnpm memo-to-post <memo链接或ID> [选项]
  *   pnpm memo-to-post https://memos.teardrop.cn/m/1781 --dry-run
- *   pnpm memo-to-post 1781 --title "周末去了西湖" --draft
  *   选项：--title --category --tags --description --slug --draft --dry-run
- *
- * 自动模式（配合 GitHub Actions 定时任务，无需参数）：
- *   pnpm memo-to-post --auto
- *   扫描 Memos，把带 #转文章 标记的动态自动转成文章文件（默认直接发布态），
- *   已处理的记入仓库根目录 .memo-to-post-state.json，不会重复转正。
  *
  * 转正后 Memos 原文不动；发布仍需去 Studio 点一次构建（或 pnpm build）。
  */
@@ -30,11 +30,19 @@ const STATE_FILE = ".memo-to-post-state.json";
 interface Memo {
 	name: string;
 	createTime: string;
+	updateTime: string;
 	content: string;
 }
 
+interface StateEntry {
+	slug?: string;
+	skipped?: string;
+	/** 上次转正时的 memo updateTime，用于检测后续编辑并重新同步 */
+	updateTime?: string;
+}
+
 interface State {
-	processed: Record<string, { slug?: string; skipped?: string }>;
+	processed: Record<string, StateEntry>;
 }
 
 interface ConvertOptions {
@@ -145,11 +153,18 @@ async function saveState(state: State): Promise<void> {
 	await fs.writeFile(STATE_FILE, `${JSON.stringify(state, null, "\t")}\n`, "utf8");
 }
 
-/** 把一条 memo 转成文章文件，返回 slug */
-async function convertMemo(memo: Memo, state: State, options: ConvertOptions = {}): Promise<string> {
+/** 生成文章内容并写入；existingSlug 用于编辑重同步（覆盖同一文件，链接不变） */
+async function convertMemo(
+	memo: Memo,
+	state: State,
+	options: ConvertOptions = {},
+): Promise<string> {
 	let content = memo.content;
 	for (const marker of options.stripMarkers ?? []) {
-		content = content.replace(new RegExp(`(?<=^|\\s)#${marker}(?=\\s|$)`, "g"), "").replace(/[ \t]+\n/g, "\n");
+		content = content
+			.replace(new RegExp(`(?<=^|\\s)#${marker}(?=\\s|$)`, "g"), "")
+			.replace(/[ \t]+\n/g, "\n")
+			.trim();
 	}
 
 	const title = options.title || pickTitle(content);
@@ -170,12 +185,15 @@ async function convertMemo(memo: Memo, state: State, options: ConvertOptions = {
 	const bodyText = plainText(content);
 	const description = options.description || `${bodyText.slice(0, 60)}${bodyText.length > 60 ? "…" : ""}`;
 
+	// slug：优先使用已有（编辑重同步，保持 URL 稳定），否则按日期+随机生成并查重
 	const datePart = memo.createTime.slice(0, 10);
 	let slug = options.slug || `${datePart}-${randomBytes(3).toString("hex")}`;
 	let filePath = path.resolve("src/content/posts", `${slug}.md`);
-	while (await exists(filePath)) {
-		slug = `${datePart}-${randomBytes(3).toString("hex")}`;
-		filePath = path.resolve("src/content/posts", `${slug}.md`);
+	if (!options.slug) {
+		while (await exists(filePath)) {
+			slug = `${datePart}-${randomBytes(3).toString("hex")}`;
+			filePath = path.resolve("src/content/posts", `${slug}.md`);
+		}
 	}
 
 	const category = options.category || "日常";
@@ -199,7 +217,7 @@ ${content.trimEnd()}
 
 	await fs.mkdir(path.dirname(filePath), { recursive: true });
 	await fs.writeFile(filePath, file, "utf8");
-	state.processed[memo.name] = { slug };
+	state.processed[memo.name] = { slug, updateTime: memo.updateTime };
 	console.log(`  ${OK} ${memo.name} -> src/content/posts/${slug}.md（${title}）`);
 	return slug;
 }
@@ -226,30 +244,59 @@ async function main() {
 	const state = await loadState();
 	let stateDirty = false;
 
-	// ---- --auto：扫描全部动态，转正带 #转文章 标记的 ----
+	// ---- --auto：转正带标记的新动态 + 同步被编辑过的已转正动态 ----
 	if (args.auto) {
 		const all = await fetchMemos();
-		const pending = all.filter(
-			(memo) =>
-				!state.processed[memo.name] &&
-				new RegExp(`(?<=^|\\s)#${POST_MARKER}(?=\\s|$)`).test(memo.content),
-		);
-		console.log(
-			`扫描 ${all.length} 条动态，${pending.length} 条带 #${POST_MARKER} 标记待转正`,
-		);
-		if (pending.length === 0) return;
+		const markerRe = new RegExp(`(?<=^|\\s)#${POST_MARKER}(?=\\s|$)`);
 
-		for (const memo of pending) {
-			try {
-				await convertMemo(memo, state, { draft: !!args.draft, stripMarkers: [POST_MARKER] });
-				stateDirty = true;
-			} catch (error) {
-				// 无标题等不可转正的内容也记入状态，避免每次运行都重试
-				state.processed[memo.name] = {
-					skipped: error instanceof Error ? error.message : String(error),
-				};
-				stateDirty = true;
-				console.warn(`  ${FAIL} 跳过 ${memo.name}：${error instanceof Error ? error.message : String(error)}`);
+		// 1) 编辑重同步：已转正、带 updateTime 记录、Memos 里 updateTime 有变化、标记还在
+		const toSync = all.filter((memo) => {
+			const entry = state.processed[memo.name];
+			return (
+				entry?.slug &&
+				entry?.updateTime &&
+				memo.updateTime !== entry.updateTime &&
+				markerRe.test(memo.content)
+			);
+		});
+
+		// 2) 新转正：未处理且带标记
+		const fresh = all.filter((memo) => !state.processed[memo.name] && markerRe.test(memo.content));
+
+		console.log(
+			`扫描 ${all.length} 条动态：${fresh.length} 条新待转正，${toSync.length} 条有编辑待重新同步`,
+		);
+		if (fresh.length === 0 && toSync.length === 0) return;
+
+		if (fresh.length > 0) {
+			console.log("转正新文章：");
+			for (const memo of fresh) {
+				try {
+					await convertMemo(memo, state, { draft: !!args.draft, stripMarkers: [POST_MARKER] });
+					stateDirty = true;
+				} catch (error) {
+					// 无标题等不可转正的内容也记入状态，避免每次运行都重试
+					state.processed[memo.name] = {
+						skipped: error instanceof Error ? error.message : String(error),
+					};
+					stateDirty = true;
+					console.warn(`  ${FAIL} 跳过 ${memo.name}：${error instanceof Error ? error.message : String(error)}`);
+				}
+			}
+		}
+
+		if (toSync.length > 0) {
+			console.log("重新同步编辑过的文章：");
+			for (const memo of toSync) {
+				try {
+					await convertMemo(memo, state, {
+						slug: state.processed[memo.name].slug, // 覆盖同一文件，链接不变
+						stripMarkers: [POST_MARKER],
+					});
+					stateDirty = true;
+				} catch (error) {
+					console.warn(`  ${FAIL} 同步失败 ${memo.name}：${error instanceof Error ? error.message : String(error)}`);
+				}
 			}
 		}
 
@@ -291,12 +338,9 @@ async function main() {
 	});
 
 	if (!args["dry-run"]) {
-		state.processed[memo.name] = { slug };
 		await saveState(state);
-		stateDirty = true;
 		console.log(`   下一步：Studio 点「发布并构建」上线${args.draft ? "（草稿不会显示，写完把 draft 改 false 再构建）" : ""}`);
 	}
-	void stateDirty;
 }
 
 main().catch((error: unknown) => {
