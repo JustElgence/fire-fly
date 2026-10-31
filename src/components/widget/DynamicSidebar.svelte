@@ -24,6 +24,7 @@ interface MemosConfig {
 	enable: boolean;
 	apiUrl: string;
 	parent?: string;
+	excludeTag?: string;
 }
 
 interface Props {
@@ -44,7 +45,10 @@ onMount(async () => {
 		let data: DynamicEntry[];
 		if (memos?.enable) {
 			try {
-				data = await fetchMemos(memos.apiUrl, { parent: memos.parent });
+				data = await fetchMemos(memos.apiUrl, {
+					parent: memos.parent,
+					excludeTag: memos.excludeTag,
+				});
 				// 与 DynamicFeed 一致：Memos 失败或为空时兑底到本地数据，避免侧栏开天窗
 				if (data.length === 0) data = await fetchWithDedup(apiUrl);
 			} catch {

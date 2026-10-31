@@ -143,9 +143,9 @@ const pendingRequests = new Map<string, Promise<DynamicEntry[]>>();
  */
 export async function fetchMemos(
 	memosApiUrl: string,
-	options?: { pageSize?: number; maxPages?: number; parent?: string },
+	options?: { pageSize?: number; maxPages?: number; parent?: string; excludeTag?: string },
 ): Promise<DynamicEntry[]> {
-	const cacheKey = `${memosApiUrl}:${options?.parent || ""}`;
+	const cacheKey = `${memosApiUrl}:${options?.parent || ""}:${options?.excludeTag || ""}`;
 	const pending = pendingRequests.get(cacheKey);
 	if (pending) return pending;
 
@@ -198,8 +198,14 @@ async function fetchMemosInternal(
 		? allMemos.filter((memo) => memo.creator === parent)
 		: allMemos;
 
+	// 转文章标记的动态由 memo-to-post 转正为文章，不在动态流里重复展示
+	const excludeRe = options?.excludeTag
+		? new RegExp(`(?<=^|\\s)#${options.excludeTag}(?=\\s|$)`)
+		: null;
+
 	return userFilteredMemos
 		.filter((memo) => memo.state === "NORMAL")
+		.filter((memo) => !excludeRe || !excludeRe.test(memo.content))
 		.map((memo) => {
 			const id = memo.name.split("/").pop() || "";
 			const published = new Date(memo.createTime).getTime();

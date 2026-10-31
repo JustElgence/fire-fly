@@ -26,6 +26,7 @@ interface MemosConfig {
 	enable: boolean;
 	apiUrl: string;
 	parent?: string;
+	excludeTag?: string;
 }
 
 interface Props {
@@ -297,7 +298,10 @@ onMount(() => {
 		try {
 			if (memos?.enable) {
 				try {
-					entries = await fetchMemos(memos.apiUrl, { parent: memos.parent });
+					entries = await fetchMemos(memos.apiUrl, {
+						parent: memos.parent,
+						excludeTag: memos.excludeTag,
+					});
 					// Memos 返回空列表通常意味着实例刚部署还没迁移数据，或 parent 与实际 creator 不符，
 					// 此时同样回退到本地数据，避免动态页意外空白
 					if (entries.length === 0) {

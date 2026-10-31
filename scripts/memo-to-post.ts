@@ -23,8 +23,9 @@ import { dynamicConfig } from "../src/config";
 const OK = "\x1b[32m✓\x1b[0m";
 const FAIL = "\x1b[31m✗\x1b[0m";
 
-/** 自动转正的触发标记：动态正文里带 #转文章 即视为要发布成文章 */
-const POST_MARKER = process.env.MEMO_POST_TAG || "转文章";
+/** 自动转正的触发标记：动态正文里带 #转文章 即视为要发布成文章（与 dynamicConfig.memos.excludeTag 同源） */
+const POST_MARKER =
+	process.env.MEMO_POST_TAG || dynamicConfig.memos.excludeTag || "转文章";
 const STATE_FILE = ".memo-to-post-state.json";
 
 interface MemoAttachment {

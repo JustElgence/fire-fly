@@ -21,4 +21,6 @@ export type DynamicMemocsConfig = {
 	apiUrl: string;
 	/** Memos 用户标识，如 "users/xiaye"，用于过滤指定用户的动态 */
 	parent?: string;
+	/** 转文章触发标记：带 #<excludeTag> 的动态不显示在动态页/侧栏（由 memo-to-post 转正为文章），标记本身也是脚本的触发条件，改这里两边同步生效 */
+	excludeTag?: string;
 };

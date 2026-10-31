@@ -37,5 +37,9 @@ export const dynamicConfig: DynamicConfig = {
 		// 注意：需与 Memos API 返回的 creator 字段完全一致（区分大小写），例如实际用户名为 admin 时应为 "users/admin"，而非"users/Admin"
 		// 部署后运行 `pnpm check-memos` 可直接查出正确的 creator 值
 		parent: "users/teardrop",
+
+		// 转文章标记：动态页/侧栏隐藏带 #转文章 的 memo（它们由 memo-to-post 转正为文章），
+		// 同时也是 pnpm memo-to-post 的触发条件，改这里两边同步生效
+		excludeTag: "转文章",
 	},
 };
