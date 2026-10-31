@@ -12,8 +12,8 @@ const pages = resolvePageToggles({
 
 	// 友链页面开关
 	friends: false,   // 友链页（第1步按需求关闭）
-	// 留言板页面开关，需要配置评论系统
-	guestbook: true,
+	// 留言板页面开关，需要配置评论系统（已按需求关闭；评论仍在文章页与动态里）
+	guestbook: false,
 
 	// ── 我的 (My) ──────────────────────────────────
 
