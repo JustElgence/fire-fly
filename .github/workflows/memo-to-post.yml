@@ -36,11 +36,30 @@ jobs:
         run: pnpm memo-to-post --auto
 
       - name: 提交转正结果
+        id: commit
         run: |
           git config user.name "memo-to-post bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --cached --quiet && echo "没有新的转正内容" || (
-            git commit -m "content: 自动转正 Memos 文章" &&
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "没有新的转正内容"
+          else
+            git commit -m "content: 自动转正 Memos 文章"
             git push
-          )
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 触发构建台构建
+        if: steps.commit.outputs.changed == 'true'
+        run: |
+          code=$(curl -sS -o /tmp/build-resp.txt -w "%{http_code}" -X POST \
+            "https://blog.teardrop.cn/studio/api/build" \
+            -H "Authorization: Bearer ${{ secrets.STUDIO_TOKEN }}" \
+            --max-time 60) || code=000
+          cat /tmp/build-resp.txt 2>/dev/null || true
+          if [ "$code" != "200" ]; then
+            echo "::error::触发构建失败（HTTP $code）：检查仓库 Secret STUDIO_TOKEN 是否已设置为构建台访问令牌"
+            exit 1
+          fi
+          echo "构建已触发，进度可在构建台「构建状态」页查看"
