@@ -50,3 +50,4 @@ package/
 
 # 构建产物备份（stale build backups）
 dist.bak-*
+build.log
