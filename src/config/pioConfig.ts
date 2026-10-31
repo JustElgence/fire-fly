@@ -2,8 +2,8 @@ import type { Live2DWidgetConfig, SpineModelConfig } from "../types/pioConfig";
 
 // Spine 看板娘配置
 export const spineModelConfig: SpineModelConfig = {
-	// Spine 看板娘开关
-	enable: true,
+	// Spine 看板娘开关（2026-10-31 按需求关闭；模型资源保留，重开改回 true 即可）
+	enable: false,
 
 	// Spine模型配置
 	model: {

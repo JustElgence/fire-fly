@@ -24,17 +24,5 @@ export const profileConfig: ProfileConfig = {
 		// 变量表中 GitHub / Email 均为「无」，故未添加；需要时按下面格式补充：
 		// { name: "GitHub", icon: "fa7-brands:github", url: "https://github.com/你的用户名", showName: false },
 		// { name: "Email", icon: "fa7-solid:envelope", url: "mailto:你的邮箱", showName: false },
-		{
-			name: "RSS",
-			icon: "fa7-solid:rss",
-			url: "/rss/",
-			showName: false,
-		},
-		{
-			name: "Atom",
-			icon: "fa7-solid:atom",
-			url: "/atom/",
-			showName: false,
-		},
 	],
 };

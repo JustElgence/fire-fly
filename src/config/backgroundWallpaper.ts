@@ -94,11 +94,6 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 				// 第3步：清除作者本人的 GitHub / Email / Sponsor 链接（变量表为「无」，赞助页已关闭）
 				// 需要时按下面格式补充：
 				// { name: "GitHub", icon: "fa7-brands:github", url: "https://github.com/你的用户名", showName: true },
-				{
-					name: "RSS",
-					icon: "fa7-solid:rss",
-					url: "/rss/",
-				},
 			],
 		},
 		// 壁纸轮播配置，横幅壁纸和全屏壁纸共享，仅在配置多张图片时生效
