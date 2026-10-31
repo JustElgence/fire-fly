@@ -27,11 +27,18 @@ const FAIL = "\x1b[31m✗\x1b[0m";
 const POST_MARKER = process.env.MEMO_POST_TAG || "转文章";
 const STATE_FILE = ".memo-to-post-state.json";
 
+interface MemoAttachment {
+	name: string;
+	filename: string;
+	type: string;
+}
+
 interface Memo {
 	name: string;
 	createTime: string;
 	updateTime: string;
 	content: string;
+	attachments?: MemoAttachment[];
 }
 
 interface StateEntry {
@@ -159,7 +166,10 @@ async function convertMemo(
 	state: State,
 	options: ConvertOptions = {},
 ): Promise<string> {
+	const apiUrl = dynamicConfig.memos.apiUrl.replace(/\/+$/, "");
 	let content = memo.content;
+	// Memos 编辑器/附件插入的图片是相对路径（/file/...），文章页上不可达，补全为实例绝对地址
+	content = content.replace(/\]\(\s*(\/?file\/)/g, `](${apiUrl}/file/`);
 	for (const marker of options.stripMarkers ?? []) {
 		content = content
 			.replace(new RegExp(`(?<=^|\\s)#${marker}(?=\\s|$)`, "g"), "")
@@ -184,6 +194,15 @@ async function convertMemo(
 
 	const bodyText = plainText(content);
 	const description = options.description || `${bodyText.slice(0, 60)}${bodyText.length > 60 ? "…" : ""}`;
+
+	// 正文里没有引用到的图片附件，追加到文末（与动态页的展示习惯一致）
+	const attachedImages = (memo.attachments ?? [])
+		.filter((a) => a.type?.startsWith("image/") && a.filename && !content.includes(a.filename))
+		.map((a) => {
+			const id = a.name.split("/").pop();
+			return `![${a.filename}](${apiUrl}/file/attachments/${id}/${a.filename})`;
+		});
+	if (attachedImages.length > 0) content = `${content}\n\n${attachedImages.join("\n\n")}`;
 
 	// slug：优先使用已有（编辑重同步，保持 URL 稳定），否则按日期+随机生成并查重
 	const datePart = memo.createTime.slice(0, 10);
