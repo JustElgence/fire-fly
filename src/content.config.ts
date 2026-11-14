@@ -83,6 +83,7 @@ const postsCollection: ContentCollection<PostData> = defineCollection({
 		seriesOrder: z.number().optional(),
 
 		/* For internal use */
+		memoId: z.string().optional(), // memo-to-post 转正来源标记（memos/<id>），用于防重复转正
 		prevTitle: z.string().default(""),
 		prevSlug: z.string().default(""),
 		nextTitle: z.string().default(""),

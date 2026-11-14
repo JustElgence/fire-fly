@@ -161,6 +161,27 @@ async function saveState(state: State): Promise<void> {
 	await fs.writeFile(STATE_FILE, `${JSON.stringify(state, null, "\t")}\n`, "utf8");
 }
 
+/**
+ * 防重复护栏：扫描文章 frontmatter 里的 memoId，建立 memo -> slug 映射。
+ * 状态文件丢失/未提交（例如手动转正后忘了提交状态）时，靠它识别“已转正”的 memo，避免重复生成。
+ */
+async function scanMemoIdMap(): Promise<Map<string, string>> {
+	const map = new Map<string, string>();
+	const dir = path.resolve("src/content/posts");
+	let files: string[] = [];
+	try {
+		files = (await fs.readdir(dir)).filter((f) => f.endsWith(".md"));
+	} catch {
+		return map;
+	}
+	for (const f of files) {
+		const text = await fs.readFile(path.join(dir, f), "utf8");
+		const m = text.match(/^memoId:\s*"?([\w/-]+)"?\s*$/m);
+		if (m) map.set(m[1], f.replace(/\.md$/, ""));
+	}
+	return map;
+}
+
 /** 生成文章内容并写入；existingSlug 用于编辑重同步（覆盖同一文件，链接不变） */
 async function convertMemo(
 	memo: Memo,
@@ -224,6 +245,7 @@ published: ${datePart}
 description: ${yamlQuote(description)}
 category: ${yamlQuote(category)}${tagsLine}
 draft: ${options.draft ? "true" : "false"}
+memoId: "${memo.name}"
 ---
 
 ${content.trimEnd()}
@@ -268,12 +290,25 @@ async function main() {
 	if (args.auto) {
 		const all = await fetchMemos();
 		const markerRe = new RegExp(`(?<=^|\\s)#${POST_MARKER}(?=\\s|$)`);
+		const memoIdMap = await scanMemoIdMap();
 
-		// 1) 编辑重同步：已转正、带 updateTime 记录、Memos 里 updateTime 有变化、标记还在
+		// 状态文件缺失兜底：带标记但 frontmatter 已有 memoId 的，只补记状态，绝不重写文章
+		for (const memo of all) {
+			if (state.processed[memo.name] || !markerRe.test(memo.content)) continue;
+			const known = memoIdMap.get(memo.name);
+			if (known) {
+				state.processed[memo.name] = { slug: known, updateTime: memo.updateTime };
+				stateDirty = true;
+				console.log(`  ${OK} 补记状态：${memo.name} -> ${known}（文章已存在，避免重复转正）`);
+			}
+		}
+
+		// 1) 编辑重同步：已转正、updateTime 有变化、标记还在
 		const toSync = all.filter((memo) => {
 			const entry = state.processed[memo.name];
+			const knownSlug = entry?.slug || memoIdMap.get(memo.name);
 			return (
-				entry?.slug &&
+				knownSlug &&
 				entry?.updateTime &&
 				memo.updateTime !== entry.updateTime &&
 				markerRe.test(memo.content)
@@ -310,7 +345,8 @@ async function main() {
 			for (const memo of toSync) {
 				try {
 					await convertMemo(memo, state, {
-						slug: state.processed[memo.name].slug, // 覆盖同一文件，链接不变
+						// 优先状态文件里的 slug，状态丢失时用 memoId 映射找回，覆盖同一文件，链接不变
+						slug: state.processed[memo.name]?.slug || memoIdMap.get(memo.name),
 						stripMarkers: [POST_MARKER],
 					});
 					stateDirty = true;
