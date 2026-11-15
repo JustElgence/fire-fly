@@ -63,6 +63,19 @@ export const fontsList: FontDefinition[] = [
 			"monospace",
 		],
 	},
+	{
+		name: "LXGW WenKai",
+		cssVariable: "--font-lxgw-wenkai",
+		provider: "local",
+		options: {
+			variants: [
+				{
+					src: ["./public/assets/fonts/LXGWWenKai-Regular.ttf"],
+				},
+			],
+		},
+		fallbacks: ["sans-serif"],
+	},
 	// ─── 本地字体示例 ───
 	// 使用步骤：
 	// 1. 将 TTF/OTF/WOFF2 字体文件放在 public/assets/fonts/ 目录下
@@ -89,14 +102,15 @@ export const fontConfig: FontSelectionConfig = {
 	enable: true,
 	// 当前选择的字体 CSS 变量名（对应上方 fonts 中的 cssVariable）
 	// 使用 "system" 表示系统字体（不加载任何自定义字体）
-	selected: ["system"],
+	// 霞鹜文楷：生活流博客的手写感正文字体，构建时自动子集化
+	selected: ["--font-lxgw-wenkai"],
 
 	// 各区域独立字体设置（填写上方 fonts 中的 cssVariable，留空则使用全局 selected 字体）
 	// 例如：bannerTitleFont: "--font-inter", 表示主页横幅主标题使用 Inter 字体
 	// 主页横幅主标题字体
 	bannerTitleFont: "--font-zen-maru-gothic",
-	// 主页横幅副标题字体
-	bannerSubtitleFont: "--font-inter",
+	// 主页横幅副标题字体（中文副标题，Inter 无中文字形）
+	bannerSubtitleFont: "--font-lxgw-wenkai",
 	// 导航栏标题字体
 	navbarTitleFont: "",
 	// 代码块字体（用于代码高亮和等宽字体场景）
@@ -107,6 +121,9 @@ export const fontConfig: FontSelectionConfig = {
 	subsetFonts: {
 		"--font-greatvibes": {
 			// 额外包含的字符
+			extraChars: "",
+		},
+		"--font-lxgw-wenkai": {
 			extraChars: "",
 		},
 	},

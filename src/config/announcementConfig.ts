@@ -4,8 +4,8 @@ export const announcementConfig: AnnouncementConfig = {
 	// 公告标题，留空则走i18n默认标题
 	title: "",
 
-	// 公告内容
-	content: "欢迎来到我的小站",
+	// 公告内容（引用《开博记》里自己的话）
+	content: "每多记一篇，这里就多一块砖。",
 
 	// 是否允许用户关闭公告
 	closable: true,
